@@ -1,0 +1,13 @@
+{
+  "presets": [
+    "es2017",
+    "babel-preset-expo",
+    "babel-preset-react",
+    "stage-1",
+  ],
+  "env": {
+    "development": {
+      "plugins": ["transform-react-jsx-source"]
+    }
+  }
+}
