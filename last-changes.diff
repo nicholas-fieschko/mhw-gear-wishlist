@@ -1,0 +1,139 @@
+diff --git a/components/Views/MonsterGrid.js b/components/Views/MonsterGrid.js
+index a4a0018..bb9ddff 100644
+--- a/components/Views/MonsterGrid.js
++++ b/components/Views/MonsterGrid.js
+@@ -1,28 +1,63 @@
+ import React from 'react';
+ import PropTypes from 'prop-types';
+-import { StyleSheet, View, Text, ListView, TouchableHighlight } from 'react-native';
++import { StyleSheet, View, Text, ListView, TouchableHighlight, Picker } from 'react-native';
+ import { StackNavigator } from 'react-navigation';
+ import Monster from 'mhw-gear-wishlist/components/shared/Monster';
+-import { getAllMonsterDataWithKey } from 'mhw-gear-wishlist/repos/monsters';
++import { getAllMonsterData } from 'mhw-gear-wishlist/repos/monsters';
+ 
+ export default class MonsterGrid extends React.Component {
+   constructor(props) {
+     super(props);
+-
++    const allMonsterData = getAllMonsterData();
+     var ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
+-    this.MonsterData = ds.cloneWithRows(getAllMonsterDataWithKey());
++    this.state = { 
++      sortElement: null,
++      monsterData: allMonsterData,
++      dataSource: ds.cloneWithRows(allMonsterData),
++    };
+   }
+ 
+-  openMonsterDetail(monster) {
+-    return () => this.props.navigation.navigate('MonsterDetail', { monster })
++  openMonsterDetail(monster) { return () => this.props.navigation.navigate('MonsterDetail', { monster }) };
++
++  handlePickerValueChange = selectedElement => {
++    const { monsterData, dataSource = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 }) } = this.state;
++    const sortField = selectedElement === "Pls choose" ? "name" : selectedElement;
++    const elementWeaknessSortedData = getAllMonsterData({ sortField });
++    this.setState({
++      sortElement: selectedElement,
++      dataSource: dataSource.cloneWithRows(elementWeaknessSortedData),
++    });
+   };
+ 
++  renderElementSorter = () => {
++    return (
++      <Picker
++        selectedValue={this.state.sortElement}
++        onValueChange={this.handlePickerValueChange}
++        style={styles.elementSortPicker}
++      >
++        <Picker.Item label="Pls choose" value="Pls choose" />
++        <Picker.Item label="Fire" value="Fire" />
++        <Picker.Item label="Water" value="Water" />
++        <Picker.Item label="Thunder" value="Thunder" />
++        <Picker.Item label="Ice" value="Ice" />
++        <Picker.Item label="Dragon" value="Dragon" />
++        <Picker.Item label="Poison" value="Poison" />
++        <Picker.Item label="Sleep" value="Sleep" />
++        <Picker.Item label="Paralysis" value="Paralysis" />
++        <Picker.Item label="Blast" value="Blast" />
++        <Picker.Item label="Stun" value="Stun" />
++      </Picker>
++    );
++  }
++
+   render() {
+     return (
+       <View style={styles.container}>
++        {this.renderElementSorter()}
+         <ListView
+           contentContainerStyle={styles.listViewContainer}
+-          dataSource={this.MonsterData}
++          dataSource={this.state.dataSource}
+           initialListSize={20}
+           renderRow={monster => (
+             <TouchableHighlight onPress={this.openMonsterDetail(monster)}>
+@@ -43,13 +78,15 @@ const styles = StyleSheet.create({
+   container: {
+     flex: 1,
+     backgroundColor: '#fff',
+-    alignItems: 'center',
+     justifyContent: 'center',
+-    paddingTop: 55,
++    paddingTop: 10,
+   },
+   listViewContainer: {
+     flexDirection: 'row',
+     flexWrap: 'wrap',
++    alignItems: 'center',
+     justifyContent: 'center',
+   },
++  elementSortPicker: {
++  }
+ });
+diff --git a/repos/monsters.js b/repos/monsters.js
+index d727fe5..f0303c0 100644
+--- a/repos/monsters.js
++++ b/repos/monsters.js
+@@ -1,8 +1,33 @@
+-import MonsterData from 'mhw-gear-wishlist/data/monster-icons';
+-
+-export const getAllMonsterDataWithKey = () => MonsterData.map(monster =>
+-    ({
+-        ...monster,
+-        key: monster.name.split(' ').join('-'),
+-    })   
+-);
++import MonsterWeaknesses from 'mhw-gear-wishlist/data/monster-weaknesses';
++import MonsterIcons from 'mhw-gear-wishlist/data/monster-icons';
++
++// array of monster objects with all known data
++const MonsterData = MonsterIcons.map(({name, image}) => ({
++    name,
++    image,
++    key: name.split(' ').join('-'),
++    ...MonsterWeaknesses[name],
++}));
++
++// const WeaknessesForMonsterByName = searchName => {
++//     const monsterName = Object.keys(MonsterWeaknesses).find(monsterName => searchName === monsterName);
++//     return monsterName
++//         ? {
++//             name: monsterName,
++//             key: monsterName.split(' ').join('-'),
++//             ...MonsterWeaknesses[monsterName],
++//         } : {
++//             error: "monster name not found"
++//         };
++// };
++
++const sortByField = field => (monsterA, monsterB) =>
++    monsterA && monsterB && monsterB[field]
++    ? monsterA[field] < monsterB[field]
++    : 1;
++
++sortByElementWeakness = element => (monsterA, monsterB) => element && monsterA && monsterB
++    ? monsterA[element] < monsterB[element]
++    : 1;
++
++export const getAllMonsterData = ({ sortField } = {}) => MonsterData.sort(sortByField(sortField || 'name'));
