@@ -1,4 +1,4 @@
-export default MonsterWeaknesses = {
+const MonsterWeaknesses = {
 	"Great Jagras": { Fire: 3, Water: 0, Thunder: 2, Ice: 2, Dragon: 1, Poison: 3, Sleep: 3, Paralysis: 3, Blast: 3, Stun: 3 },
 	"Kulu-Ya-Ku": { Fire: 2, Water: 3, Thunder: 2, Ice: 2, Dragon: 2, Poison: 2, Sleep: 2, Paralysis: 2, Blast: 2, Stun: 2 },
 	"Pukei-Pukei": { Fire: 2, Water: 0, Thunder: 3, Ice: 2, Dragon: 1, Poison: 1, Sleep: 3, Paralysis: 3, Blast: 2, Stun: 2 },
@@ -33,3 +33,5 @@ export default MonsterWeaknesses = {
 	"Vaal Hazak": { Fire: 3, Water: 0, Thunder: 1, Ice: 2, Dragon: 3, Poison: 1, Sleep: 1, Paralysis: 1, Blast: 2, Stun: 2 },
 	"Xeno'jiiva": { Fire: 2, Water: 2, Thunder: 2, Ice: 2, Dragon: 2, Poison: 3, Sleep: 0, Paralysis: 1, Blast: 2, Stun: 1 },
 };
+
+export default MonsterWeaknesses;

@@ -1,139 +1,1440 @@
+diff --git a/.babelrc b/.babelrc
+index 6cd5150..4a22f3b 100644
+--- a/.babelrc
++++ b/.babelrc
+@@ -3,11 +3,22 @@
+     "es2017",
+     "babel-preset-expo",
+     "babel-preset-react",
+-    "stage-1",
++    "stage-0"
+   ],
+   "env": {
+     "development": {
+       "plugins": ["transform-react-jsx-source"]
++    },
++    "test": {
++      "presets": [
++        "es2017",
++        "babel-preset-expo",
++        "babel-preset-react",
++        "stage-0"
++      ],
++      "plugins": [
++        "transform-es2015-modules-commonjs"
++      ]
+     }
+   }
+ }
 diff --git a/components/Views/MonsterGrid.js b/components/Views/MonsterGrid.js
-index a4a0018..bb9ddff 100644
+index 6892245..ad442fe 100644
 --- a/components/Views/MonsterGrid.js
 +++ b/components/Views/MonsterGrid.js
-@@ -1,28 +1,63 @@
- import React from 'react';
- import PropTypes from 'prop-types';
--import { StyleSheet, View, Text, ListView, TouchableHighlight } from 'react-native';
-+import { StyleSheet, View, Text, ListView, TouchableHighlight, Picker } from 'react-native';
- import { StackNavigator } from 'react-navigation';
- import Monster from 'mhw-gear-wishlist/components/shared/Monster';
--import { getAllMonsterDataWithKey } from 'mhw-gear-wishlist/repos/monsters';
-+import { getAllMonsterData } from 'mhw-gear-wishlist/repos/monsters';
- 
- export default class MonsterGrid extends React.Component {
-   constructor(props) {
-     super(props);
--
-+    const allMonsterData = getAllMonsterData();
-     var ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
--    this.MonsterData = ds.cloneWithRows(getAllMonsterDataWithKey());
-+    this.state = { 
-+      sortElement: null,
-+      monsterData: allMonsterData,
-+      dataSource: ds.cloneWithRows(allMonsterData),
-+    };
+@@ -127,5 +127,6 @@ const styles = StyleSheet.create({
+   elementSortPicker: {
+     marginTop: 0,
+     paddingTop: 0,
++    height: 50,
    }
- 
--  openMonsterDetail(monster) {
--    return () => this.props.navigation.navigate('MonsterDetail', { monster })
-+  openMonsterDetail(monster) { return () => this.props.navigation.navigate('MonsterDetail', { monster }) };
-+
-+  handlePickerValueChange = selectedElement => {
-+    const { monsterData, dataSource = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 }) } = this.state;
-+    const sortField = selectedElement === "Pls choose" ? "name" : selectedElement;
-+    const elementWeaknessSortedData = getAllMonsterData({ sortField });
-+    this.setState({
-+      sortElement: selectedElement,
-+      dataSource: dataSource.cloneWithRows(elementWeaknessSortedData),
-+    });
-   };
- 
-+  renderElementSorter = () => {
-+    return (
-+      <Picker
-+        selectedValue={this.state.sortElement}
-+        onValueChange={this.handlePickerValueChange}
-+        style={styles.elementSortPicker}
-+      >
-+        <Picker.Item label="Pls choose" value="Pls choose" />
-+        <Picker.Item label="Fire" value="Fire" />
-+        <Picker.Item label="Water" value="Water" />
-+        <Picker.Item label="Thunder" value="Thunder" />
-+        <Picker.Item label="Ice" value="Ice" />
-+        <Picker.Item label="Dragon" value="Dragon" />
-+        <Picker.Item label="Poison" value="Poison" />
-+        <Picker.Item label="Sleep" value="Sleep" />
-+        <Picker.Item label="Paralysis" value="Paralysis" />
-+        <Picker.Item label="Blast" value="Blast" />
-+        <Picker.Item label="Stun" value="Stun" />
-+      </Picker>
-+    );
-+  }
-+
-   render() {
-     return (
-       <View style={styles.container}>
-+        {this.renderElementSorter()}
-         <ListView
-           contentContainerStyle={styles.listViewContainer}
--          dataSource={this.MonsterData}
-+          dataSource={this.state.dataSource}
-           initialListSize={20}
-           renderRow={monster => (
-             <TouchableHighlight onPress={this.openMonsterDetail(monster)}>
-@@ -43,13 +78,15 @@ const styles = StyleSheet.create({
-   container: {
-     flex: 1,
-     backgroundColor: '#fff',
--    alignItems: 'center',
-     justifyContent: 'center',
--    paddingTop: 55,
-+    paddingTop: 10,
-   },
-   listViewContainer: {
-     flexDirection: 'row',
-     flexWrap: 'wrap',
-+    alignItems: 'center',
-     justifyContent: 'center',
-   },
-+  elementSortPicker: {
-+  }
  });
-diff --git a/repos/monsters.js b/repos/monsters.js
-index d727fe5..f0303c0 100644
---- a/repos/monsters.js
-+++ b/repos/monsters.js
-@@ -1,8 +1,33 @@
--import MonsterData from 'mhw-gear-wishlist/data/monster-icons';
+diff --git a/data/monster-weaknesses.js b/data/monster-weaknesses.js
+index d95acb7..91f60fa 100644
+--- a/data/monster-weaknesses.js
++++ b/data/monster-weaknesses.js
+@@ -1,4 +1,4 @@
+-export default MonsterWeaknesses = {
++const MonsterWeaknesses = {
+ 	"Great Jagras": { Fire: 3, Water: 0, Thunder: 2, Ice: 2, Dragon: 1, Poison: 3, Sleep: 3, Paralysis: 3, Blast: 3, Stun: 3 },
+ 	"Kulu-Ya-Ku": { Fire: 2, Water: 3, Thunder: 2, Ice: 2, Dragon: 2, Poison: 2, Sleep: 2, Paralysis: 2, Blast: 2, Stun: 2 },
+ 	"Pukei-Pukei": { Fire: 2, Water: 0, Thunder: 3, Ice: 2, Dragon: 1, Poison: 1, Sleep: 3, Paralysis: 3, Blast: 2, Stun: 2 },
+@@ -32,4 +32,6 @@ export default MonsterWeaknesses = {
+ 	"Kushala Daora": { Fire: 1, Water: 0, Thunder: 3, Ice: 0, Dragon: 2, Poison: 3, Sleep: 1, Paralysis: 1, Blast: 3, Stun: 2 },
+ 	"Vaal Hazak": { Fire: 3, Water: 0, Thunder: 1, Ice: 2, Dragon: 3, Poison: 1, Sleep: 1, Paralysis: 1, Blast: 2, Stun: 2 },
+ 	"Xeno'jiiva": { Fire: 2, Water: 2, Thunder: 2, Ice: 2, Dragon: 2, Poison: 3, Sleep: 0, Paralysis: 1, Blast: 2, Stun: 1 },
+-};
+\ No newline at end of file
++};
++
++export default MonsterWeaknesses;
+diff --git a/last-changes.diff b/last-changes.diff
+index 4d62837..e69de29 100644
+--- a/last-changes.diff
++++ b/last-changes.diff
+@@ -1,139 +0,0 @@
+-diff --git a/components/Views/MonsterGrid.js b/components/Views/MonsterGrid.js
+-index a4a0018..bb9ddff 100644
+---- a/components/Views/MonsterGrid.js
+-+++ b/components/Views/MonsterGrid.js
+-@@ -1,28 +1,63 @@
+- import React from 'react';
+- import PropTypes from 'prop-types';
+--import { StyleSheet, View, Text, ListView, TouchableHighlight } from 'react-native';
+-+import { StyleSheet, View, Text, ListView, TouchableHighlight, Picker } from 'react-native';
+- import { StackNavigator } from 'react-navigation';
+- import Monster from 'mhw-gear-wishlist/components/shared/Monster';
+--import { getAllMonsterDataWithKey } from 'mhw-gear-wishlist/repos/monsters';
+-+import { getAllMonsterData } from 'mhw-gear-wishlist/repos/monsters';
+- 
+- export default class MonsterGrid extends React.Component {
+-   constructor(props) {
+-     super(props);
+--
+-+    const allMonsterData = getAllMonsterData();
+-     var ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
+--    this.MonsterData = ds.cloneWithRows(getAllMonsterDataWithKey());
+-+    this.state = { 
+-+      sortElement: null,
+-+      monsterData: allMonsterData,
+-+      dataSource: ds.cloneWithRows(allMonsterData),
+-+    };
+-   }
+- 
+--  openMonsterDetail(monster) {
+--    return () => this.props.navigation.navigate('MonsterDetail', { monster })
+-+  openMonsterDetail(monster) { return () => this.props.navigation.navigate('MonsterDetail', { monster }) };
+-+
+-+  handlePickerValueChange = selectedElement => {
+-+    const { monsterData, dataSource = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 }) } = this.state;
+-+    const sortField = selectedElement === "Pls choose" ? "name" : selectedElement;
+-+    const elementWeaknessSortedData = getAllMonsterData({ sortField });
+-+    this.setState({
+-+      sortElement: selectedElement,
+-+      dataSource: dataSource.cloneWithRows(elementWeaknessSortedData),
+-+    });
+-   };
+- 
+-+  renderElementSorter = () => {
+-+    return (
+-+      <Picker
+-+        selectedValue={this.state.sortElement}
+-+        onValueChange={this.handlePickerValueChange}
+-+        style={styles.elementSortPicker}
+-+      >
+-+        <Picker.Item label="Pls choose" value="Pls choose" />
+-+        <Picker.Item label="Fire" value="Fire" />
+-+        <Picker.Item label="Water" value="Water" />
+-+        <Picker.Item label="Thunder" value="Thunder" />
+-+        <Picker.Item label="Ice" value="Ice" />
+-+        <Picker.Item label="Dragon" value="Dragon" />
+-+        <Picker.Item label="Poison" value="Poison" />
+-+        <Picker.Item label="Sleep" value="Sleep" />
+-+        <Picker.Item label="Paralysis" value="Paralysis" />
+-+        <Picker.Item label="Blast" value="Blast" />
+-+        <Picker.Item label="Stun" value="Stun" />
+-+      </Picker>
+-+    );
+-+  }
+-+
+-   render() {
+-     return (
+-       <View style={styles.container}>
+-+        {this.renderElementSorter()}
+-         <ListView
+-           contentContainerStyle={styles.listViewContainer}
+--          dataSource={this.MonsterData}
+-+          dataSource={this.state.dataSource}
+-           initialListSize={20}
+-           renderRow={monster => (
+-             <TouchableHighlight onPress={this.openMonsterDetail(monster)}>
+-@@ -43,13 +78,15 @@ const styles = StyleSheet.create({
+-   container: {
+-     flex: 1,
+-     backgroundColor: '#fff',
+--    alignItems: 'center',
+-     justifyContent: 'center',
+--    paddingTop: 55,
+-+    paddingTop: 10,
+-   },
+-   listViewContainer: {
+-     flexDirection: 'row',
+-     flexWrap: 'wrap',
+-+    alignItems: 'center',
+-     justifyContent: 'center',
+-   },
+-+  elementSortPicker: {
+-+  }
+- });
+-diff --git a/repos/monsters.js b/repos/monsters.js
+-index d727fe5..f0303c0 100644
+---- a/repos/monsters.js
+-+++ b/repos/monsters.js
+-@@ -1,8 +1,33 @@
+--import MonsterData from 'mhw-gear-wishlist/data/monster-icons';
+--
+--export const getAllMonsterDataWithKey = () => MonsterData.map(monster =>
+--    ({
+--        ...monster,
+--        key: monster.name.split(' ').join('-'),
+--    })   
+--);
+-+import MonsterWeaknesses from 'mhw-gear-wishlist/data/monster-weaknesses';
+-+import MonsterIcons from 'mhw-gear-wishlist/data/monster-icons';
+-+
+-+// array of monster objects with all known data
+-+const MonsterData = MonsterIcons.map(({name, image}) => ({
+-+    name,
+-+    image,
+-+    key: name.split(' ').join('-'),
+-+    ...MonsterWeaknesses[name],
+-+}));
+-+
+-+// const WeaknessesForMonsterByName = searchName => {
+-+//     const monsterName = Object.keys(MonsterWeaknesses).find(monsterName => searchName === monsterName);
+-+//     return monsterName
+-+//         ? {
+-+//             name: monsterName,
+-+//             key: monsterName.split(' ').join('-'),
+-+//             ...MonsterWeaknesses[monsterName],
+-+//         } : {
+-+//             error: "monster name not found"
+-+//         };
+-+// };
+-+
+-+const sortByField = field => (monsterA, monsterB) =>
+-+    monsterA && monsterB && monsterB[field]
+-+    ? monsterA[field] < monsterB[field]
+-+    : 1;
+-+
+-+sortByElementWeakness = element => (monsterA, monsterB) => element && monsterA && monsterB
+-+    ? monsterA[element] < monsterB[element]
+-+    : 1;
+-+
+-+export const getAllMonsterData = ({ sortField } = {}) => MonsterData.sort(sortByField(sortField || 'name'));
+diff --git a/package-lock.json b/package-lock.json
+index ba63ae5..356c34f 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -163,6 +163,12 @@
+         "join-component": "1.1.0"
+       }
+     },
++    "@types/jest": {
++      "version": "22.1.3",
++      "resolved": "https://registry.npmjs.org/@types/jest/-/jest-22.1.3.tgz",
++      "integrity": "sha512-qpbOiPE3iqeqnicgOVg6MBgtFMxe0Qd5PHtHp4Y7YGBWnNIgv7Mr2lx7ILEN6d7K+Fub9FW1S3Q2NKvbc+b+AA==",
++      "dev": true
++    },
+     "Base64": {
+       "version": "0.1.4",
+       "resolved": "https://registry.npmjs.org/Base64/-/Base64-0.1.4.tgz",
+@@ -496,6 +502,12 @@
+         "lodash": "4.17.5"
+       }
+     },
++    "async-each": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/async-each/-/async-each-1.0.1.tgz",
++      "integrity": "sha1-GdOGodntxufByF04iu28xW0zYC0=",
++      "dev": true
++    },
+     "async-limiter": {
+       "version": "1.0.0",
+       "resolved": "https://registry.npmjs.org/async-limiter/-/async-limiter-1.0.0.tgz",
+@@ -887,6 +899,12 @@
+       "resolved": "https://registry.npmjs.org/babel-plugin-syntax-decorators/-/babel-plugin-syntax-decorators-6.13.0.tgz",
+       "integrity": "sha1-MSVjtNvePMgGzuPkFszurd0RrAs="
+     },
++    "babel-plugin-syntax-do-expressions": {
++      "version": "6.13.0",
++      "resolved": "https://registry.npmjs.org/babel-plugin-syntax-do-expressions/-/babel-plugin-syntax-do-expressions-6.13.0.tgz",
++      "integrity": "sha1-V0d1YTmqJtOQ0JQQsDdEugfkeW0=",
++      "dev": true
++    },
+     "babel-plugin-syntax-dynamic-import": {
+       "version": "6.18.0",
+       "resolved": "https://registry.npmjs.org/babel-plugin-syntax-dynamic-import/-/babel-plugin-syntax-dynamic-import-6.18.0.tgz",
+@@ -907,6 +925,12 @@
+       "resolved": "https://registry.npmjs.org/babel-plugin-syntax-flow/-/babel-plugin-syntax-flow-6.18.0.tgz",
+       "integrity": "sha1-TDqyCiryaqIM0lmVw5jE63AxDI0="
+     },
++    "babel-plugin-syntax-function-bind": {
++      "version": "6.13.0",
++      "resolved": "https://registry.npmjs.org/babel-plugin-syntax-function-bind/-/babel-plugin-syntax-function-bind-6.13.0.tgz",
++      "integrity": "sha1-SMSV8Xe98xqYHnMvVa3AvdJgH0Y=",
++      "dev": true
++    },
+     "babel-plugin-syntax-jsx": {
+       "version": "6.18.0",
+       "resolved": "https://registry.npmjs.org/babel-plugin-syntax-jsx/-/babel-plugin-syntax-jsx-6.18.0.tgz",
+@@ -988,6 +1012,16 @@
+         "babel-template": "6.26.0"
+       }
+     },
++    "babel-plugin-transform-do-expressions": {
++      "version": "6.22.0",
++      "resolved": "https://registry.npmjs.org/babel-plugin-transform-do-expressions/-/babel-plugin-transform-do-expressions-6.22.0.tgz",
++      "integrity": "sha1-KMyvkoEtlJws0SgfaQyP3EaK6bs=",
++      "dev": true,
++      "requires": {
++        "babel-plugin-syntax-do-expressions": "6.13.0",
++        "babel-runtime": "6.26.0"
++      }
++    },
+     "babel-plugin-transform-es2015-arrow-functions": {
+       "version": "6.22.0",
+       "resolved": "https://registry.npmjs.org/babel-plugin-transform-es2015-arrow-functions/-/babel-plugin-transform-es2015-arrow-functions-6.22.0.tgz",
+@@ -1197,6 +1231,16 @@
+         "babel-runtime": "6.26.0"
+       }
+     },
++    "babel-plugin-transform-function-bind": {
++      "version": "6.22.0",
++      "resolved": "https://registry.npmjs.org/babel-plugin-transform-function-bind/-/babel-plugin-transform-function-bind-6.22.0.tgz",
++      "integrity": "sha1-xvuOlqwpajELjPjqQBRiQH3fapc=",
++      "dev": true,
++      "requires": {
++        "babel-plugin-syntax-function-bind": "6.13.0",
++        "babel-runtime": "6.26.0"
++      }
++    },
+     "babel-plugin-transform-object-assign": {
+       "version": "6.22.0",
+       "resolved": "https://registry.npmjs.org/babel-plugin-transform-object-assign/-/babel-plugin-transform-object-assign-6.22.0.tgz",
+@@ -1450,6 +1494,17 @@
+         "react-transform-hmr": "1.0.4"
+       }
+     },
++    "babel-preset-stage-0": {
++      "version": "6.24.1",
++      "resolved": "https://registry.npmjs.org/babel-preset-stage-0/-/babel-preset-stage-0-6.24.1.tgz",
++      "integrity": "sha1-VkLRUEL5E4TX5a+LyIsduVsDnmo=",
++      "dev": true,
++      "requires": {
++        "babel-plugin-transform-do-expressions": "6.22.0",
++        "babel-plugin-transform-function-bind": "6.22.0",
++        "babel-preset-stage-1": "6.24.1"
++      }
++    },
+     "babel-preset-stage-1": {
+       "version": "6.24.1",
+       "resolved": "https://registry.npmjs.org/babel-preset-stage-1/-/babel-preset-stage-1-6.24.1.tgz",
+@@ -1645,6 +1700,12 @@
+         "chainsaw": "0.1.0"
+       }
+     },
++    "binary-extensions": {
++      "version": "1.11.0",
++      "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-1.11.0.tgz",
++      "integrity": "sha1-RqoXUftqL5PuXmibsQh9SxTGwgU=",
++      "dev": true
++    },
+     "bluebird": {
+       "version": "3.5.1",
+       "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.5.1.tgz",
+@@ -1913,6 +1974,23 @@
+       "integrity": "sha1-wKHS86cJLgN3S/qD8UwPxXkKhmc=",
+       "dev": true
+     },
++    "chokidar": {
++      "version": "1.7.0",
++      "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-1.7.0.tgz",
++      "integrity": "sha1-eY5ol3gVHIB2tLNg5e3SjNortGg=",
++      "dev": true,
++      "requires": {
++        "anymatch": "1.3.2",
++        "async-each": "1.0.1",
++        "fsevents": "1.1.3",
++        "glob-parent": "2.0.0",
++        "inherits": "2.0.3",
++        "is-binary-path": "1.0.1",
++        "is-glob": "2.0.1",
++        "path-is-absolute": "1.0.1",
++        "readdirp": "2.1.0"
++      }
++    },
+     "chownr": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/chownr/-/chownr-1.0.1.tgz",
+@@ -2302,6 +2380,25 @@
+       "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz",
+       "integrity": "sha1-tf1UIgqivFq1eqtxQMlAdUUDwac="
+     },
++    "cpx": {
++      "version": "1.5.0",
++      "resolved": "https://registry.npmjs.org/cpx/-/cpx-1.5.0.tgz",
++      "integrity": "sha1-GFvgGFEdhycN7czCkxceN2VauI8=",
++      "dev": true,
++      "requires": {
++        "babel-runtime": "6.26.0",
++        "chokidar": "1.7.0",
++        "duplexer": "0.1.1",
++        "glob": "7.1.2",
++        "glob2base": "0.0.12",
++        "minimatch": "3.0.4",
++        "mkdirp": "0.5.1",
++        "resolve": "1.5.0",
++        "safe-buffer": "5.1.1",
++        "shell-quote": "1.6.1",
++        "subarg": "1.0.0"
++      }
++    },
+     "crc": {
+       "version": "3.3.0",
+       "resolved": "https://registry.npmjs.org/crc/-/crc-3.3.0.tgz",
+@@ -2603,6 +2700,12 @@
+         "sentence-case": "1.1.3"
+       }
+     },
++    "duplexer": {
++      "version": "0.1.1",
++      "resolved": "https://registry.npmjs.org/duplexer/-/duplexer-0.1.1.tgz",
++      "integrity": "sha1-rOb/gIwc5mtX0ev5eXessCM0z8E=",
++      "dev": true
++    },
+     "duplexer2": {
+       "version": "0.0.2",
+       "resolved": "https://registry.npmjs.org/duplexer2/-/duplexer2-0.0.2.tgz",
+@@ -3377,6 +3480,12 @@
+         "path-exists": "3.0.0"
+       }
+     },
++    "find-index": {
++      "version": "0.1.1",
++      "resolved": "https://registry.npmjs.org/find-index/-/find-index-0.1.1.tgz",
++      "integrity": "sha1-Z101iyyjiS15Whq0cjL4tuLg3eQ=",
++      "dev": true
++    },
+     "find-up": {
+       "version": "2.1.0",
+       "resolved": "https://registry.npmjs.org/find-up/-/find-up-2.1.0.tgz",
+@@ -4409,6 +4518,15 @@
+       "integrity": "sha512-X5VIEO/yy5NH3p9ORhlNodakQo/cK4I0lCtARNeAkWueJiToew5Xs9DiukVKsW5dgpjnnQgou9Rbj3HUkM6OUw==",
+       "dev": true
+     },
++    "glob2base": {
++      "version": "0.0.12",
++      "resolved": "https://registry.npmjs.org/glob2base/-/glob2base-0.0.12.tgz",
++      "integrity": "sha1-nUGbPijxLoOjYhZKJ3BVkiycDVY=",
++      "dev": true,
++      "requires": {
++        "find-index": "0.1.1"
++      }
++    },
+     "global": {
+       "version": "4.3.2",
+       "resolved": "https://registry.npmjs.org/global/-/global-4.3.2.tgz",
+@@ -4955,6 +5073,15 @@
+       "resolved": "https://registry.npmjs.org/is-arrayish/-/is-arrayish-0.2.1.tgz",
+       "integrity": "sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0="
+     },
++    "is-binary-path": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/is-binary-path/-/is-binary-path-1.0.1.tgz",
++      "integrity": "sha1-dfFmQrSA8YenEcgUFh/TpKdlWJg=",
++      "dev": true,
++      "requires": {
++        "binary-extensions": "1.11.0"
++      }
++    },
+     "is-buffer": {
+       "version": "1.1.6",
+       "resolved": "https://registry.npmjs.org/is-buffer/-/is-buffer-1.1.6.tgz",
+@@ -8659,6 +8786,50 @@
+         "string_decoder": "0.10.31"
+       }
+     },
++    "readdirp": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-2.1.0.tgz",
++      "integrity": "sha1-TtCtBg3zBzMAxIRANz9y0cxkLXg=",
++      "dev": true,
++      "requires": {
++        "graceful-fs": "4.1.11",
++        "minimatch": "3.0.4",
++        "readable-stream": "2.3.4",
++        "set-immediate-shim": "1.0.1"
++      },
++      "dependencies": {
++        "isarray": {
++          "version": "1.0.0",
++          "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
++          "integrity": "sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=",
++          "dev": true
++        },
++        "readable-stream": {
++          "version": "2.3.4",
++          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.4.tgz",
++          "integrity": "sha512-vuYxeWYM+fde14+rajzqgeohAI7YoJcHE7kXDAc4Nk0EbuKnJfqtY9YtRkLo/tqkuF7MsBQRhPnPeyjYITp3ZQ==",
++          "dev": true,
++          "requires": {
++            "core-util-is": "1.0.2",
++            "inherits": "2.0.3",
++            "isarray": "1.0.0",
++            "process-nextick-args": "2.0.0",
++            "safe-buffer": "5.1.1",
++            "string_decoder": "1.0.3",
++            "util-deprecate": "1.0.2"
++          }
++        },
++        "string_decoder": {
++          "version": "1.0.3",
++          "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.0.3.tgz",
++          "integrity": "sha512-4AH6Z5fzNNBcH+6XDMfA/BTt87skxqJlO0lAh3Dker5zThcAxG6mKz+iGu308UKoPPQ8Dcqx/4JhujzltRa+hQ==",
++          "dev": true,
++          "requires": {
++            "safe-buffer": "5.1.1"
++          }
++        }
++      }
++    },
+     "realpath-native": {
+       "version": "1.0.0",
+       "resolved": "https://registry.npmjs.org/realpath-native/-/realpath-native-1.0.0.tgz",
+@@ -9142,6 +9313,12 @@
+       "resolved": "https://registry.npmjs.org/set-blocking/-/set-blocking-2.0.0.tgz",
+       "integrity": "sha1-BF+XgtARrppoA93TgrJDkrPYkPc="
+     },
++    "set-immediate-shim": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/set-immediate-shim/-/set-immediate-shim-1.0.1.tgz",
++      "integrity": "sha1-SysbJ+uAip+NzEgaWOXlb1mfP2E=",
++      "dev": true
++    },
+     "setimmediate": {
+       "version": "1.0.5",
+       "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
+@@ -9515,6 +9692,15 @@
+       "resolved": "https://registry.npmjs.org/strip-eof/-/strip-eof-1.0.0.tgz",
+       "integrity": "sha1-u0P/VZim6wXYm1n80SnJgzE2Br8="
+     },
++    "subarg": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/subarg/-/subarg-1.0.0.tgz",
++      "integrity": "sha1-9izxdYHplrSPyWVpn1TAauJouNI=",
++      "dev": true,
++      "requires": {
++        "minimist": "1.2.0"
++      }
++    },
+     "superagent": {
+       "version": "3.8.2",
+       "resolved": "https://registry.npmjs.org/superagent/-/superagent-3.8.2.tgz",
+@@ -9953,6 +10139,116 @@
+       "resolved": "https://registry.npmjs.org/trim-right/-/trim-right-1.0.1.tgz",
+       "integrity": "sha1-yy4SAwZ+DI3h9hQJS5/kVwTqYAM="
+     },
++    "ts-jest": {
++      "version": "22.0.4",
++      "resolved": "https://registry.npmjs.org/ts-jest/-/ts-jest-22.0.4.tgz",
++      "integrity": "sha512-cQlgWYCakArbHW5B5RgZvmBomepOuIBLCR972AdWuaK6VmLxbmCh8OCaGGcBChf7dv/8YNACYvC6jeebQDKgyA==",
++      "dev": true,
++      "requires": {
++        "babel-core": "6.26.0",
++        "babel-plugin-istanbul": "4.1.5",
++        "babel-plugin-transform-es2015-modules-commonjs": "6.26.0",
++        "babel-preset-jest": "22.2.0",
++        "cpx": "1.5.0",
++        "fs-extra": "4.0.3",
++        "jest-config": "22.3.0",
++        "pkg-dir": "2.0.0",
++        "source-map-support": "0.5.3",
++        "yargs": "11.0.0"
++      },
++      "dependencies": {
++        "ansi-regex": {
++          "version": "3.0.0",
++          "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-3.0.0.tgz",
++          "integrity": "sha1-7QMXwyIGT3lGbAKWa922Bas32Zg=",
++          "dev": true
++        },
++        "cliui": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/cliui/-/cliui-4.0.0.tgz",
++          "integrity": "sha512-nY3W5Gu2racvdDk//ELReY+dHjb9PlIcVDFXP72nVIhq2Gy3LuVXYwJoPVudwQnv1shtohpgkdCKT2YaKY0CKw==",
++          "dev": true,
++          "requires": {
++            "string-width": "2.1.1",
++            "strip-ansi": "4.0.0",
++            "wrap-ansi": "2.1.0"
++          }
++        },
++        "fs-extra": {
++          "version": "4.0.3",
++          "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-4.0.3.tgz",
++          "integrity": "sha512-q6rbdDd1o2mAnQreO7YADIxf/Whx4AHBiRf6d+/cVT8h44ss+lHgxf1FemcqDnQt9X3ct4McHr+JMGlYSsK7Cg==",
++          "dev": true,
++          "requires": {
++            "graceful-fs": "4.1.11",
++            "jsonfile": "4.0.0",
++            "universalify": "0.1.1"
++          }
++        },
++        "jsonfile": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz",
++          "integrity": "sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=",
++          "dev": true,
++          "requires": {
++            "graceful-fs": "4.1.11"
++          }
++        },
++        "source-map": {
++          "version": "0.6.1",
++          "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz",
++          "integrity": "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==",
++          "dev": true
++        },
++        "source-map-support": {
++          "version": "0.5.3",
++          "resolved": "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.3.tgz",
++          "integrity": "sha512-eKkTgWYeBOQqFGXRfKabMFdnWepo51vWqEdoeikaEPFiJC7MCU5j2h4+6Q8npkZTeLGbSyecZvRxiSoWl3rh+w==",
++          "dev": true,
++          "requires": {
++            "source-map": "0.6.1"
++          }
++        },
++        "strip-ansi": {
++          "version": "4.0.0",
++          "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-4.0.0.tgz",
++          "integrity": "sha1-qEeQIusaw2iocTibY1JixQXuNo8=",
++          "dev": true,
++          "requires": {
++            "ansi-regex": "3.0.0"
++          }
++        },
++        "yargs": {
++          "version": "11.0.0",
++          "resolved": "https://registry.npmjs.org/yargs/-/yargs-11.0.0.tgz",
++          "integrity": "sha512-Rjp+lMYQOWtgqojx1dEWorjCofi1YN7AoFvYV7b1gx/7dAAeuI4kN5SZiEvr0ZmsZTOpDRcCqrpI10L31tFkBw==",
++          "dev": true,
++          "requires": {
++            "cliui": "4.0.0",
++            "decamelize": "1.2.0",
++            "find-up": "2.1.0",
++            "get-caller-file": "1.0.2",
++            "os-locale": "2.1.0",
++            "require-directory": "2.1.1",
++            "require-main-filename": "1.0.1",
++            "set-blocking": "2.0.0",
++            "string-width": "2.1.1",
++            "which-module": "2.0.0",
++            "y18n": "3.2.1",
++            "yargs-parser": "9.0.2"
++          }
++        },
++        "yargs-parser": {
++          "version": "9.0.2",
++          "resolved": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-9.0.2.tgz",
++          "integrity": "sha1-nM9qQ0YP5O1Aqbto9I1DuKaMwHc=",
++          "dev": true,
++          "requires": {
++            "camelcase": "4.1.0"
++          }
++        }
++      }
++    },
+     "tsscmp": {
+       "version": "1.0.5",
+       "resolved": "https://registry.npmjs.org/tsscmp/-/tsscmp-1.0.5.tgz",
+diff --git a/package.json b/package.json
+index e31210b..7031d63 100644
+--- a/package.json
++++ b/package.json
+@@ -3,13 +3,18 @@
+   "version": "0.1.0",
+   "private": true,
+   "devDependencies": {
++    "@types/jest": "^22.1.3",
+     "babel-preset-es2017": "^6.24.1",
+     "babel-preset-react": "^6.24.1",
++    "babel-preset-stage-0": "^6.24.1",
+     "babel-preset-stage-1": "^6.24.1",
++    "jest": "^22.4.2",
+     "jest-expo": "25.0.0",
+     "prettier": "1.10.2",
+     "react-native-scripts": "1.11.1",
+-    "react-test-renderer": "16.2.0"
++    "react-test-renderer": "16.2.0",
++    "ts-jest": "^22.0.4",
++    "typescript": "^2.7.2"
+   },
+   "main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
+   "scripts": {
+@@ -17,10 +22,24 @@
+     "eject": "react-native-scripts eject",
+     "android": "react-native-scripts android",
+     "ios": "react-native-scripts ios",
+-    "test": "node node_modules/jest/bin/jest.js"
++    "test": "node --harmony node_modules/jest/bin/jest.js"
+   },
+   "jest": {
+-    "preset": "jest-expo"
++    "preset": "jest-expo",
++    "//": {
++      "transform": {
++        "^.+\\.tsx?$": "ts-jest"
++      },
++      "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
++      "moduleFileExtensions": [
++        "ts",
++        "tsx",
++        "js",
++        "jsx",
++        "json",
++        "node"
++      ]
++    }
+   },
+   "dependencies": {
+     "expo": "^25.0.0",
+@@ -28,6 +47,7 @@
+     "react-dom": "^16.2.0",
+     "react-native": "^0.52.0",
+     "react-native-emoji": "^1.2.0",
++    "react-native-responsive-dimensions": "^1.0.2",
+     "react-navigation": "^1.0.3"
+   }
+ }
+diff --git a/yarn.lock b/yarn.lock
+index 49eacb8..54d49e8 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -85,6 +85,10 @@
+     component-type "^1.2.1"
+     join-component "^1.1.0"
+ 
++"@types/jest@^22.1.3":
++  version "22.1.3"
++  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-22.1.3.tgz#25da391935e6fac537551456f077ce03144ec168"
++
+ Base64@~0.1.3:
+   version "0.1.4"
+   resolved "https://registry.yarnpkg.com/Base64/-/Base64-0.1.4.tgz#e9f6c6bef567fd635ea4162ab14dd329e74aa6de"
+@@ -338,6 +342,10 @@ astral-regex@^1.0.0:
+   version "1.0.0"
+   resolved "https://registry.yarnpkg.com/astral-regex/-/astral-regex-1.0.0.tgz#6c8c3fb827dd43ee3918f27b82782ab7658a6fd9"
+ 
++async-each@^1.0.0:
++  version "1.0.1"
++  resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
++
+ async-limiter@~1.0.0:
+   version "1.0.0"
+   resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.0.tgz#78faed8c3d074ab81f22b4e985d79e8738f720f8"
+@@ -581,6 +589,13 @@ babel-jest@^22.1.0, babel-jest@^22.2.2:
+     babel-plugin-istanbul "^4.1.5"
+     babel-preset-jest "^22.2.0"
+ 
++babel-jest@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-22.4.1.tgz#ff53ebca45957347f27ff4666a31499fbb4c4ddd"
++  dependencies:
++    babel-plugin-istanbul "^4.1.5"
++    babel-preset-jest "^22.4.1"
++
+ babel-messages@^6.23.0:
+   version "6.23.0"
+   resolved "https://registry.yarnpkg.com/babel-messages/-/babel-messages-6.23.0.tgz#f3cdf4703858035b2a2951c6ec5edf6c62f2630e"
+@@ -599,7 +614,7 @@ babel-plugin-external-helpers@^6.18.0:
+   dependencies:
+     babel-runtime "^6.22.0"
+ 
+-babel-plugin-istanbul@^4.1.5:
++babel-plugin-istanbul@^4.1.4, babel-plugin-istanbul@^4.1.5:
+   version "4.1.5"
+   resolved "https://registry.yarnpkg.com/babel-plugin-istanbul/-/babel-plugin-istanbul-4.1.5.tgz#6760cdd977f411d3e175bb064f2bc327d99b2b6e"
+   dependencies:
+@@ -611,6 +626,10 @@ babel-plugin-jest-hoist@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-22.2.0.tgz#bd34f39d652406669713b8c89e23ef25c890b993"
+ 
++babel-plugin-jest-hoist@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-22.4.1.tgz#d712fe5da8b6965f3191dacddbefdbdf4fb66d63"
++
+ babel-plugin-module-resolver@^2.7.1:
+   version "2.7.1"
+   resolved "https://registry.yarnpkg.com/babel-plugin-module-resolver/-/babel-plugin-module-resolver-2.7.1.tgz#18be3c42ddf59f7a456c9e0512cd91394f6e4be1"
+@@ -801,7 +820,7 @@ babel-plugin-transform-es2015-literals@^6.5.0, babel-plugin-transform-es2015-lit
+   dependencies:
+     babel-runtime "^6.22.0"
+ 
+-babel-plugin-transform-es2015-modules-commonjs@6.x, babel-plugin-transform-es2015-modules-commonjs@^6.5.0, babel-plugin-transform-es2015-modules-commonjs@^6.8.0:
++babel-plugin-transform-es2015-modules-commonjs@6.x, babel-plugin-transform-es2015-modules-commonjs@^6.24.1, babel-plugin-transform-es2015-modules-commonjs@^6.5.0, babel-plugin-transform-es2015-modules-commonjs@^6.8.0:
+   version "6.26.0"
+   resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-modules-commonjs/-/babel-plugin-transform-es2015-modules-commonjs-6.26.0.tgz#0d8394029b7dc6abe1a97ef181e00758dd2e5d8a"
+   dependencies:
+@@ -1029,6 +1048,13 @@ babel-preset-flow@^6.23.0:
+   dependencies:
+     babel-plugin-transform-flow-strip-types "^6.22.0"
+ 
++babel-preset-jest@^22.0.1, babel-preset-jest@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/babel-preset-jest/-/babel-preset-jest-22.4.1.tgz#efa2e5f5334242a9457a068452d7d09735db172a"
++  dependencies:
++    babel-plugin-jest-hoist "^22.4.1"
++    babel-plugin-syntax-object-rest-spread "^6.13.0"
++
+ babel-preset-jest@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/babel-preset-jest/-/babel-preset-jest-22.2.0.tgz#f77b43f06ef4d8547214b2e206cc76a25c3ba0e2"
+@@ -1220,6 +1246,10 @@ big-integer@^1.6.7:
+   version "1.6.26"
+   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.26.tgz#3af1672fa62daf2d5ecafacf6e5aa0d25e02c1c8"
+ 
++binary-extensions@^1.0.0:
++  version "1.11.0"
++  resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.11.0.tgz#46aa1751fb6a2f93ee5e689bb1087d4b14c6c205"
++
+ binary@^0.3.0:
+   version "0.3.0"
+   resolved "https://registry.yarnpkg.com/binary/-/binary-0.3.0.tgz#9f60553bc5ce8c3386f3b553cff47462adecaa79"
+@@ -1462,6 +1492,21 @@ charenc@~0.0.1:
+   version "0.0.2"
+   resolved "https://registry.yarnpkg.com/charenc/-/charenc-0.0.2.tgz#c0a1d2f3a7092e03774bfa83f14c0fc5790a8667"
+ 
++chokidar@^1.6.0:
++  version "1.7.0"
++  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-1.7.0.tgz#798e689778151c8076b4b360e5edd28cda2bb468"
++  dependencies:
++    anymatch "^1.3.0"
++    async-each "^1.0.0"
++    glob-parent "^2.0.0"
++    inherits "^2.0.1"
++    is-binary-path "^1.0.0"
++    is-glob "^2.0.0"
++    path-is-absolute "^1.0.0"
++    readdirp "^2.0.0"
++  optionalDependencies:
++    fsevents "^1.0.0"
++
+ chownr@^1.0.1:
+   version "1.0.1"
+   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.0.1.tgz#e2a75042a9551908bebd25b8523d5f9769d79181"
+@@ -1726,6 +1771,22 @@ core-util-is@1.0.2, core-util-is@~1.0.0:
+   version "1.0.2"
+   resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+ 
++cpx@^1.5.0:
++  version "1.5.0"
++  resolved "https://registry.yarnpkg.com/cpx/-/cpx-1.5.0.tgz#185be018511d87270dedccc293171e37655ab88f"
++  dependencies:
++    babel-runtime "^6.9.2"
++    chokidar "^1.6.0"
++    duplexer "^0.1.1"
++    glob "^7.0.5"
++    glob2base "^0.0.12"
++    minimatch "^3.0.2"
++    mkdirp "^0.5.1"
++    resolve "^1.1.7"
++    safe-buffer "^5.0.1"
++    shell-quote "^1.6.1"
++    subarg "^1.0.0"
++
+ crc@3.3.0:
+   version "3.3.0"
+   resolved "https://registry.yarnpkg.com/crc/-/crc-3.3.0.tgz#fa622e1bc388bf257309082d6b65200ce67090ba"
+@@ -1970,6 +2031,10 @@ duplexer3@^0.1.4:
+   version "0.1.4"
+   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
+ 
++duplexer@^0.1.1:
++  version "0.1.1"
++  resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
++
+ ecc-jsbn@~0.1.1:
+   version "0.1.1"
+   resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz#0fc73a9ed5f0d53c38193398523ef7e543777505"
+@@ -2172,6 +2237,17 @@ expect@^22.3.0:
+     jest-message-util "^22.2.0"
+     jest-regex-util "^22.1.0"
+ 
++expect@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/expect/-/expect-22.4.0.tgz#371edf1ae15b83b5bf5ec34b42f1584660a36c16"
++  dependencies:
++    ansi-styles "^3.2.0"
++    jest-diff "^22.4.0"
++    jest-get-type "^22.1.0"
++    jest-matcher-utils "^22.4.0"
++    jest-message-util "^22.4.0"
++    jest-regex-util "^22.1.0"
++
+ expo@^25.0.0:
+   version "25.0.0"
+   resolved "https://registry.yarnpkg.com/expo/-/expo-25.0.0.tgz#791d0052e159d56854a84d90540bf11c33abfe4d"
+@@ -2394,6 +2470,10 @@ find-babel-config@^1.0.1:
+     json5 "^0.5.1"
+     path-exists "^3.0.0"
+ 
++find-index@^0.1.1:
++  version "0.1.1"
++  resolved "https://registry.yarnpkg.com/find-index/-/find-index-0.1.1.tgz#675d358b2ca3892d795a1ab47232f8b6e2e0dde4"
++
+ find-up@^1.0.0:
+   version "1.1.2"
+   resolved "https://registry.yarnpkg.com/find-up/-/find-up-1.1.2.tgz#6b2e9822b1a2ce0a60ab64d610eccad53cb24d0f"
+@@ -2467,6 +2547,14 @@ fresh@0.5.2:
+   version "0.5.2"
+   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
+ 
++fs-extra@4.0.3, fs-extra@^4.0.2:
++  version "4.0.3"
++  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.3.tgz#0d852122e5bc5beb453fb028e9c0c9bf36340c94"
++  dependencies:
++    graceful-fs "^4.1.2"
++    jsonfile "^4.0.0"
++    universalify "^0.1.0"
++
+ fs-extra@^1.0.0:
+   version "1.0.0"
+   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-1.0.0.tgz#cd3ce5f7e7cb6145883fcae3191e9877f8587950"
+@@ -2483,14 +2571,6 @@ fs-extra@^3.0.1:
+     jsonfile "^3.0.0"
+     universalify "^0.1.0"
+ 
+-fs-extra@^4.0.2:
+-  version "4.0.3"
+-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.3.tgz#0d852122e5bc5beb453fb028e9c0c9bf36340c94"
+-  dependencies:
+-    graceful-fs "^4.1.2"
+-    jsonfile "^4.0.0"
+-    universalify "^0.1.0"
 -
--export const getAllMonsterDataWithKey = () => MonsterData.map(monster =>
--    ({
--        ...monster,
--        key: monster.name.split(' ').join('-'),
--    })   
--);
-+import MonsterWeaknesses from 'mhw-gear-wishlist/data/monster-weaknesses';
-+import MonsterIcons from 'mhw-gear-wishlist/data/monster-icons';
+ fs-minipass@^1.2.3:
+   version "1.2.5"
+   resolved "https://registry.yarnpkg.com/fs-minipass/-/fs-minipass-1.2.5.tgz#06c277218454ec288df77ada54a03b8702aacb9d"
+@@ -2501,7 +2581,7 @@ fs.realpath@^1.0.0:
+   version "1.0.0"
+   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
+ 
+-fsevents@^1.1.1:
++fsevents@^1.0.0, fsevents@^1.1.1:
+   version "1.1.3"
+   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-1.1.3.tgz#11f82318f5fe7bb2cd22965a108e9306208216d8"
+   dependencies:
+@@ -2605,6 +2685,12 @@ glob-promise@^3.3.0:
+   version "3.3.0"
+   resolved "https://registry.yarnpkg.com/glob-promise/-/glob-promise-3.3.0.tgz#d1eb3625c4e6dcbb9b96eeae4425d5a3b135fed2"
+ 
++glob2base@^0.0.12:
++  version "0.0.12"
++  resolved "https://registry.yarnpkg.com/glob2base/-/glob2base-0.0.12.tgz#9d419b3e28f12e83a362164a277055922c9c0d56"
++  dependencies:
++    find-index "^0.1.1"
 +
-+// array of monster objects with all known data
-+const MonsterData = MonsterIcons.map(({name, image}) => ({
-+    name,
-+    image,
-+    key: name.split(' ').join('-'),
-+    ...MonsterWeaknesses[name],
-+}));
+ glob@^6.0.1:
+   version "6.0.4"
+   resolved "https://registry.yarnpkg.com/glob/-/glob-6.0.4.tgz#0f08860f6a155127b2fadd4f9ce24b1aab6e4d22"
+@@ -2923,7 +3009,7 @@ inflight@^1.0.4:
+     once "^1.3.0"
+     wrappy "1"
+ 
+-inherits@2, inherits@2.0.3, inherits@^2.0.3, inherits@~2.0.0, inherits@~2.0.1, inherits@~2.0.3:
++inherits@2, inherits@2.0.3, inherits@^2.0.1, inherits@^2.0.3, inherits@~2.0.0, inherits@~2.0.1, inherits@~2.0.3:
+   version "2.0.3"
+   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
+ 
+@@ -2980,6 +3066,12 @@ is-arrayish@^0.3.1:
+   version "0.3.1"
+   resolved "https://registry.yarnpkg.com/is-arrayish/-/is-arrayish-0.3.1.tgz#c2dfc386abaa0c3e33c48db3fe87059e69065efd"
+ 
++is-binary-path@^1.0.0:
++  version "1.0.1"
++  resolved "https://registry.yarnpkg.com/is-binary-path/-/is-binary-path-1.0.1.tgz#75f16642b480f187a711c814161fd3a4a7655898"
++  dependencies:
++    binary-extensions "^1.0.0"
 +
-+// const WeaknessesForMonsterByName = searchName => {
-+//     const monsterName = Object.keys(MonsterWeaknesses).find(monsterName => searchName === monsterName);
-+//     return monsterName
-+//         ? {
-+//             name: monsterName,
-+//             key: monsterName.split(' ').join('-'),
-+//             ...MonsterWeaknesses[monsterName],
-+//         } : {
-+//             error: "monster name not found"
-+//         };
-+// };
+ is-buffer@^1.1.5, is-buffer@~1.1.1:
+   version "1.1.6"
+   resolved "https://registry.yarnpkg.com/is-buffer/-/is-buffer-1.1.6.tgz#efaa2ea9daa0d7ab2ea13a97b2b8ad51fefbe8be"
+@@ -3262,6 +3354,61 @@ jest-cli@^22.3.0:
+     which "^1.2.12"
+     yargs "^10.0.3"
+ 
++jest-cli@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-cli/-/jest-cli-22.4.2.tgz#e6546dc651e13d164481aa3e76e53ac4f4edab06"
++  dependencies:
++    ansi-escapes "^3.0.0"
++    chalk "^2.0.1"
++    exit "^0.1.2"
++    glob "^7.1.2"
++    graceful-fs "^4.1.11"
++    import-local "^1.0.0"
++    is-ci "^1.0.10"
++    istanbul-api "^1.1.14"
++    istanbul-lib-coverage "^1.1.1"
++    istanbul-lib-instrument "^1.8.0"
++    istanbul-lib-source-maps "^1.2.1"
++    jest-changed-files "^22.2.0"
++    jest-config "^22.4.2"
++    jest-environment-jsdom "^22.4.1"
++    jest-get-type "^22.1.0"
++    jest-haste-map "^22.4.2"
++    jest-message-util "^22.4.0"
++    jest-regex-util "^22.1.0"
++    jest-resolve-dependencies "^22.1.0"
++    jest-runner "^22.4.2"
++    jest-runtime "^22.4.2"
++    jest-snapshot "^22.4.0"
++    jest-util "^22.4.1"
++    jest-validate "^22.4.2"
++    jest-worker "^22.2.2"
++    micromatch "^2.3.11"
++    node-notifier "^5.2.1"
++    realpath-native "^1.0.0"
++    rimraf "^2.5.4"
++    slash "^1.0.0"
++    string-length "^2.0.0"
++    strip-ansi "^4.0.0"
++    which "^1.2.12"
++    yargs "^10.0.3"
 +
-+const sortByField = field => (monsterA, monsterB) =>
-+    monsterA && monsterB && monsterB[field]
-+    ? monsterA[field] < monsterB[field]
-+    : 1;
++jest-config@^22.0.1, jest-config@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-config/-/jest-config-22.4.2.tgz#580ba5819bf81a5e48f4fd470e8b81834f45c855"
++  dependencies:
++    chalk "^2.0.1"
++    glob "^7.1.1"
++    jest-environment-jsdom "^22.4.1"
++    jest-environment-node "^22.4.1"
++    jest-get-type "^22.1.0"
++    jest-jasmine2 "^22.4.2"
++    jest-regex-util "^22.1.0"
++    jest-resolve "^22.4.2"
++    jest-util "^22.4.1"
++    jest-validate "^22.4.2"
++    pretty-format "^22.4.0"
 +
-+sortByElementWeakness = element => (monsterA, monsterB) => element && monsterA && monsterB
-+    ? monsterA[element] < monsterB[element]
-+    : 1;
+ jest-config@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-config/-/jest-config-22.3.0.tgz#94c7149f123933a872ee24c1719687419c4a623c"
+@@ -3287,6 +3434,15 @@ jest-diff@^22.1.0:
+     jest-get-type "^22.1.0"
+     pretty-format "^22.1.0"
+ 
++jest-diff@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-22.4.0.tgz#384c2b78519ca44ca126382df53f134289232525"
++  dependencies:
++    chalk "^2.0.1"
++    diff "^3.2.0"
++    jest-get-type "^22.1.0"
++    pretty-format "^22.4.0"
 +
-+export const getAllMonsterData = ({ sortField } = {}) => MonsterData.sort(sortByField(sortField || 'name'));
+ jest-docblock@22.1.0:
+   version "22.1.0"
+   resolved "https://registry.yarnpkg.com/jest-docblock/-/jest-docblock-22.1.0.tgz#3fe5986d5444cbcb149746eb4b07c57c5a464dfd"
+@@ -3299,6 +3455,12 @@ jest-docblock@^22.1.0, jest-docblock@^22.2.2:
+   dependencies:
+     detect-newline "^2.1.0"
+ 
++jest-docblock@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-docblock/-/jest-docblock-22.4.0.tgz#dbf1877e2550070cfc4d9b07a55775a0483159b8"
++  dependencies:
++    detect-newline "^2.1.0"
++
+ jest-environment-jsdom@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-environment-jsdom/-/jest-environment-jsdom-22.3.0.tgz#c267a063e5dc16219fba0e07542d8aa2576a1c88"
+@@ -3307,6 +3469,14 @@ jest-environment-jsdom@^22.3.0:
+     jest-util "^22.3.0"
+     jsdom "^11.5.1"
+ 
++jest-environment-jsdom@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/jest-environment-jsdom/-/jest-environment-jsdom-22.4.1.tgz#754f408872441740100d3917e5ec40c74de6447f"
++  dependencies:
++    jest-mock "^22.2.0"
++    jest-util "^22.4.1"
++    jsdom "^11.5.1"
++
+ jest-environment-node@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-environment-node/-/jest-environment-node-22.3.0.tgz#97d34d9706a718d743075149d1950555c10338c0"
+@@ -3314,6 +3484,13 @@ jest-environment-node@^22.3.0:
+     jest-mock "^22.2.0"
+     jest-util "^22.3.0"
+ 
++jest-environment-node@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/jest-environment-node/-/jest-environment-node-22.4.1.tgz#418850eb654596b8d6e36c2021cbedbc23df8e16"
++  dependencies:
++    jest-mock "^22.2.0"
++    jest-util "^22.4.1"
++
+ jest-expo@25.0.0:
+   version "25.0.0"
+   resolved "https://registry.yarnpkg.com/jest-expo/-/jest-expo-25.0.0.tgz#c17b77b66091aca174445405a19ce2ae88e27dd9"
+@@ -3349,6 +3526,18 @@ jest-haste-map@^22.3.0:
+     micromatch "^2.3.11"
+     sane "^2.0.0"
+ 
++jest-haste-map@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-haste-map/-/jest-haste-map-22.4.2.tgz#a90178e66146d4378bb076345a949071f3b015b4"
++  dependencies:
++    fb-watchman "^2.0.0"
++    graceful-fs "^4.1.11"
++    jest-docblock "^22.4.0"
++    jest-serializer "^22.4.0"
++    jest-worker "^22.2.2"
++    micromatch "^2.3.11"
++    sane "^2.0.0"
++
+ jest-jasmine2@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-22.3.0.tgz#ea127dfbb04c6e03998ae0358225435e47520666"
+@@ -3365,12 +3554,34 @@ jest-jasmine2@^22.3.0:
+     jest-snapshot "^22.2.0"
+     source-map-support "^0.5.0"
+ 
++jest-jasmine2@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-22.4.2.tgz#dfd3d259579ed6f52510d8f1ab692808f0d40691"
++  dependencies:
++    chalk "^2.0.1"
++    co "^4.6.0"
++    expect "^22.4.0"
++    graceful-fs "^4.1.11"
++    is-generator-fn "^1.0.0"
++    jest-diff "^22.4.0"
++    jest-matcher-utils "^22.4.0"
++    jest-message-util "^22.4.0"
++    jest-snapshot "^22.4.0"
++    jest-util "^22.4.1"
++    source-map-support "^0.5.0"
++
+ jest-leak-detector@^22.1.0:
+   version "22.1.0"
+   resolved "https://registry.yarnpkg.com/jest-leak-detector/-/jest-leak-detector-22.1.0.tgz#08376644cee07103da069baac19adb0299b772c2"
+   dependencies:
+     pretty-format "^22.1.0"
+ 
++jest-leak-detector@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-leak-detector/-/jest-leak-detector-22.4.0.tgz#64da77f05b001c96d2062226e079f89989c4aa2f"
++  dependencies:
++    pretty-format "^22.4.0"
++
+ jest-matcher-utils@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-22.2.0.tgz#5390f823c18c748543d463825aa8e4df0db253ca"
+@@ -3379,6 +3590,14 @@ jest-matcher-utils@^22.2.0:
+     jest-get-type "^22.1.0"
+     pretty-format "^22.1.0"
+ 
++jest-matcher-utils@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-22.4.0.tgz#d55f5faf2270462736bdf7c7485ee931c9d4b6a1"
++  dependencies:
++    chalk "^2.0.1"
++    jest-get-type "^22.1.0"
++    pretty-format "^22.4.0"
++
+ jest-message-util@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-22.2.0.tgz#84a6bb34186d8b9af7e0732fabbef63f7355f7b2"
+@@ -3389,6 +3608,16 @@ jest-message-util@^22.2.0:
+     slash "^1.0.0"
+     stack-utils "^1.0.1"
+ 
++jest-message-util@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-22.4.0.tgz#e3d861df16d2fee60cb2bc8feac2188a42579642"
++  dependencies:
++    "@babel/code-frame" "^7.0.0-beta.35"
++    chalk "^2.0.1"
++    micromatch "^2.3.11"
++    slash "^1.0.0"
++    stack-utils "^1.0.1"
++
+ jest-mock@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/jest-mock/-/jest-mock-22.2.0.tgz#444b3f9488a7473adae09bc8a77294afded397a7"
+@@ -3410,6 +3639,13 @@ jest-resolve@^22.3.0:
+     browser-resolve "^1.11.2"
+     chalk "^2.0.1"
+ 
++jest-resolve@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-resolve/-/jest-resolve-22.4.2.tgz#25d88aa4147462c9c1c6a1ba16250d3794c24d00"
++  dependencies:
++    browser-resolve "^1.11.2"
++    chalk "^2.0.1"
++
+ jest-runner@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-runner/-/jest-runner-22.3.0.tgz#70393f62770be754e2d14f5ca3d896e408aa001a"
+@@ -3426,6 +3662,22 @@ jest-runner@^22.3.0:
+     jest-worker "^22.2.2"
+     throat "^4.0.0"
+ 
++jest-runner@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-runner/-/jest-runner-22.4.2.tgz#19390ea9d99f768973e16f95a1efa351c0017e87"
++  dependencies:
++    exit "^0.1.2"
++    jest-config "^22.4.2"
++    jest-docblock "^22.4.0"
++    jest-haste-map "^22.4.2"
++    jest-jasmine2 "^22.4.2"
++    jest-leak-detector "^22.4.0"
++    jest-message-util "^22.4.0"
++    jest-runtime "^22.4.2"
++    jest-util "^22.4.1"
++    jest-worker "^22.2.2"
++    throat "^4.0.0"
++
+ jest-runtime@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-runtime/-/jest-runtime-22.3.0.tgz#1883d6a4227c1f6af276ead3ed27654257d1ef8c"
+@@ -3450,6 +3702,35 @@ jest-runtime@^22.3.0:
+     write-file-atomic "^2.1.0"
+     yargs "^10.0.3"
+ 
++jest-runtime@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-runtime/-/jest-runtime-22.4.2.tgz#0de0444f65ce15ee4f2e0055133fc7c17b9168f3"
++  dependencies:
++    babel-core "^6.0.0"
++    babel-jest "^22.4.1"
++    babel-plugin-istanbul "^4.1.5"
++    chalk "^2.0.1"
++    convert-source-map "^1.4.0"
++    exit "^0.1.2"
++    graceful-fs "^4.1.11"
++    jest-config "^22.4.2"
++    jest-haste-map "^22.4.2"
++    jest-regex-util "^22.1.0"
++    jest-resolve "^22.4.2"
++    jest-util "^22.4.1"
++    jest-validate "^22.4.2"
++    json-stable-stringify "^1.0.1"
++    micromatch "^2.3.11"
++    realpath-native "^1.0.0"
++    slash "^1.0.0"
++    strip-bom "3.0.0"
++    write-file-atomic "^2.1.0"
++    yargs "^10.0.3"
++
++jest-serializer@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-serializer/-/jest-serializer-22.4.0.tgz#b5d145b98c4b0d2c20ab686609adbb81fe23b566"
++
+ jest-snapshot@^22.2.0:
+   version "22.2.0"
+   resolved "https://registry.yarnpkg.com/jest-snapshot/-/jest-snapshot-22.2.0.tgz#0c0ba152d296ef70fa198cc84977a2cc269ee4cf"
+@@ -3461,6 +3742,17 @@ jest-snapshot@^22.2.0:
+     natural-compare "^1.4.0"
+     pretty-format "^22.1.0"
+ 
++jest-snapshot@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/jest-snapshot/-/jest-snapshot-22.4.0.tgz#03d3ce63f8fa7352388afc6a3c8b5ccc3a180ed7"
++  dependencies:
++    chalk "^2.0.1"
++    jest-diff "^22.4.0"
++    jest-matcher-utils "^22.4.0"
++    mkdirp "^0.5.1"
++    natural-compare "^1.4.0"
++    pretty-format "^22.4.0"
++
+ jest-util@^22.3.0:
+   version "22.3.0"
+   resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-22.3.0.tgz#d05bff567a3a86c0e9b3838d812f8290aa768097"
+@@ -3473,6 +3765,18 @@ jest-util@^22.3.0:
+     jest-validate "^22.2.2"
+     mkdirp "^0.5.1"
+ 
++jest-util@^22.4.1:
++  version "22.4.1"
++  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-22.4.1.tgz#dd17c3bdb067f8e90591563ec0c42bf847dc249f"
++  dependencies:
++    callsites "^2.0.0"
++    chalk "^2.0.1"
++    graceful-fs "^4.1.11"
++    is-ci "^1.0.10"
++    jest-message-util "^22.4.0"
++    mkdirp "^0.5.1"
++    source-map "^0.6.0"
++
+ jest-validate@^22.2.2:
+   version "22.2.2"
+   resolved "https://registry.yarnpkg.com/jest-validate/-/jest-validate-22.2.2.tgz#9cdce422c93cc28395e907ac6bbc929158d9a6ba"
+@@ -3482,6 +3786,16 @@ jest-validate@^22.2.2:
+     leven "^2.1.0"
+     pretty-format "^22.1.0"
+ 
++jest-validate@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest-validate/-/jest-validate-22.4.2.tgz#e789a4e056173bf97fe797a2df2d52105c57d4f4"
++  dependencies:
++    chalk "^2.0.1"
++    jest-config "^22.4.2"
++    jest-get-type "^22.1.0"
++    leven "^2.1.0"
++    pretty-format "^22.4.0"
++
+ jest-worker@22.1.0:
+   version "22.1.0"
+   resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-22.1.0.tgz#0987832fe58fbdc205357f4c19b992446368cafb"
+@@ -3501,6 +3815,13 @@ jest@^22.1.1:
+     import-local "^1.0.0"
+     jest-cli "^22.3.0"
+ 
++jest@^22.4.2:
++  version "22.4.2"
++  resolved "https://registry.yarnpkg.com/jest/-/jest-22.4.2.tgz#34012834a49bf1bdd3bc783850ab44e4499afc20"
++  dependencies:
++    import-local "^1.0.0"
++    jest-cli "^22.4.2"
++
+ joi@^10.0.2:
+   version "10.6.0"
+   resolved "https://registry.yarnpkg.com/joi/-/joi-10.6.0.tgz#52587f02d52b8b75cdb0c74f0b164a191a0e1fc2"
+@@ -4760,6 +5081,13 @@ pretty-format@^22.1.0:
+     ansi-regex "^3.0.0"
+     ansi-styles "^3.2.0"
+ 
++pretty-format@^22.4.0:
++  version "22.4.0"
++  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-22.4.0.tgz#237b1f7e1c50ed03bc65c03ccc29d7c8bb7beb94"
++  dependencies:
++    ansi-regex "^3.0.0"
++    ansi-styles "^3.2.0"
++
+ pretty-format@^4.2.1:
+   version "4.3.1"
+   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-4.3.1.tgz#530be5c42b3c05b36414a7a2a4337aa80acd0e8d"
+@@ -4985,6 +5313,10 @@ react-native-maps@0.19.0:
+   version "0.19.0"
+   resolved "https://registry.yarnpkg.com/react-native-maps/-/react-native-maps-0.19.0.tgz#ce94fad1cf360e335cb4338a68c95f791e869074"
+ 
++react-native-responsive-dimensions@^1.0.2:
++  version "1.0.2"
++  resolved "https://registry.yarnpkg.com/react-native-responsive-dimensions/-/react-native-responsive-dimensions-1.0.2.tgz#521551fa90548f888578eafd71101d19061727ac"
++
+ react-native-safe-area-view@^0.6.0:
+   version "0.6.0"
+   resolved "https://registry.yarnpkg.com/react-native-safe-area-view/-/react-native-safe-area-view-0.6.0.tgz#ce01eb27905a77780219537e0f53fe9c783a8b3d"
+@@ -5201,7 +5533,7 @@ readable-stream@1.1.x, readable-stream@^1.1.8, readable-stream@~1.1.8, readable-
+     isarray "0.0.1"
+     string_decoder "~0.10.x"
+ 
+-readable-stream@2, readable-stream@^2.0.1, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
++readable-stream@2, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.0.6, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
+   version "2.3.4"
+   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-2.3.4.tgz#c946c3f47fa7d8eabc0b6150f4a12f69a4574071"
+   dependencies:
+@@ -5213,6 +5545,15 @@ readable-stream@2, readable-stream@^2.0.1, readable-stream@^2.0.5, readable-stre
+     string_decoder "~1.0.3"
+     util-deprecate "~1.0.1"
+ 
++readdirp@^2.0.0:
++  version "2.1.0"
++  resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-2.1.0.tgz#4ed0ad060df3073300c48440373f72d1cc642d78"
++  dependencies:
++    graceful-fs "^4.1.2"
++    minimatch "^3.0.2"
++    readable-stream "^2.0.2"
++    set-immediate-shim "^1.0.1"
++
+ realpath-native@^1.0.0:
+   version "1.0.0"
+   resolved "https://registry.yarnpkg.com/realpath-native/-/realpath-native-1.0.0.tgz#7885721a83b43bd5327609f0ddecb2482305fdf0"
+@@ -5408,7 +5749,7 @@ resolve@1.1.7:
+   version "1.1.7"
+   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.1.7.tgz#203114d82ad2c5ed9e8e0411b3932875e889e97b"
+ 
+-resolve@^1.2.0:
++resolve@^1.1.7, resolve@^1.2.0:
+   version "1.5.0"
+   resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.5.0.tgz#1f09acce796c9a762579f31b2c1cc4c3cddf9f36"
+   dependencies:
+@@ -5613,6 +5954,10 @@ set-blocking@^2.0.0, set-blocking@~2.0.0:
+   version "2.0.0"
+   resolved "https://registry.yarnpkg.com/set-blocking/-/set-blocking-2.0.0.tgz#045f9782d011ae9a6803ddd382b24392b3d890f7"
+ 
++set-immediate-shim@^1.0.1:
++  version "1.0.1"
++  resolved "https://registry.yarnpkg.com/set-immediate-shim/-/set-immediate-shim-1.0.1.tgz#4b2b1b27eb808a9f8dcc481a58e5e56f599f3f61"
++
+ setimmediate@^1.0.5:
+   version "1.0.5"
+   resolved "https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
+@@ -5908,6 +6253,12 @@ strip-json-comments@~2.0.1:
+   version "2.0.1"
+   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
+ 
++subarg@^1.0.0:
++  version "1.0.0"
++  resolved "https://registry.yarnpkg.com/subarg/-/subarg-1.0.0.tgz#f62cf17581e996b48fc965699f54c06ae268b8d2"
++  dependencies:
++    minimist "^1.1.0"
++
+ superagent-proxy@^1.0.2:
+   version "1.0.3"
+   resolved "https://registry.yarnpkg.com/superagent-proxy/-/superagent-proxy-1.0.3.tgz#acfa776672f11c24a90ad575e855def8be44f741"
+@@ -6128,6 +6479,21 @@ trim@~0.0.1:
+   version "0.0.1"
+   resolved "https://registry.yarnpkg.com/trim/-/trim-0.0.1.tgz#5858547f6b290757ee95cccc666fb50084c460dd"
+ 
++ts-jest@^22.0.4:
++  version "22.0.4"
++  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-22.0.4.tgz#be5e8d7d2cf3f3ef97d877a6a0562508c3f64515"
++  dependencies:
++    babel-core "^6.24.1"
++    babel-plugin-istanbul "^4.1.4"
++    babel-plugin-transform-es2015-modules-commonjs "^6.24.1"
++    babel-preset-jest "^22.0.1"
++    cpx "^1.5.0"
++    fs-extra "4.0.3"
++    jest-config "^22.0.1"
++    pkg-dir "^2.0.0"
++    source-map-support "^0.5.0"
++    yargs "^11.0.0"
++
+ tsscmp@1.0.5:
+   version "1.0.5"
+   resolved "https://registry.yarnpkg.com/tsscmp/-/tsscmp-1.0.5.tgz#7dc4a33af71581ab4337da91d85ca5427ebd9a97"
+@@ -6159,6 +6525,10 @@ typedarray@^0.0.6:
+   version "0.0.6"
+   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
+ 
++typescript@^2.7.2:
++  version "2.7.2"
++  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.2.tgz#2d615a1ef4aee4f574425cdff7026edf81919836"
++
+ ua-parser-js@^0.7.9:
+   version "0.7.17"
+   resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-0.7.17.tgz#e9ec5f9498b9ec910e7ae3ac626a805c4d09ecac"
+@@ -6614,6 +6984,12 @@ yargs-parser@^8.1.0:
+   dependencies:
+     camelcase "^4.1.0"
+ 
++yargs-parser@^9.0.2:
++  version "9.0.2"
++  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-9.0.2.tgz#9ccf6a43460fe4ed40a9bb68f48d43b8a68cc077"
++  dependencies:
++    camelcase "^4.1.0"
++
+ yargs@^10.0.3:
+   version "10.1.2"
+   resolved "https://registry.yarnpkg.com/yargs/-/yargs-10.1.2.tgz#454d074c2b16a51a43e2fb7807e4f9de69ccb5c5"
+@@ -6631,6 +7007,23 @@ yargs@^10.0.3:
+     y18n "^3.2.1"
+     yargs-parser "^8.1.0"
+ 
++yargs@^11.0.0:
++  version "11.0.0"
++  resolved "https://registry.yarnpkg.com/yargs/-/yargs-11.0.0.tgz#c052931006c5eee74610e5fc0354bedfd08a201b"
++  dependencies:
++    cliui "^4.0.0"
++    decamelize "^1.1.1"
++    find-up "^2.1.0"
++    get-caller-file "^1.0.1"
++    os-locale "^2.0.0"
++    require-directory "^2.1.1"
++    require-main-filename "^1.0.1"
++    set-blocking "^2.0.0"
++    string-width "^2.0.0"
++    which-module "^2.0.0"
++    y18n "^3.2.1"
++    yargs-parser "^9.0.2"
++
+ yargs@^8.0.2:
+   version "8.0.2"
+   resolved "https://registry.yarnpkg.com/yargs/-/yargs-8.0.2.tgz#6299a9055b1cefc969ff7e79c1d918dceb22c360"

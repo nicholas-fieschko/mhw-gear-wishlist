@@ -127,5 +127,6 @@ const styles = StyleSheet.create({
   elementSortPicker: {
     marginTop: 0,
     paddingTop: 0,
+    height: 50,
   }
 });
