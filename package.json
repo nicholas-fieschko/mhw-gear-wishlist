@@ -9,7 +9,7 @@
     "babel-preset-stage-0": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
     "jest": "^22.4.2",
-    "jest-expo": "25.0.0",
+    "jest-expo": "25.1.0-beta.0",
     "prettier": "1.10.2",
     "react-native-scripts": "1.11.1",
     "react-test-renderer": "16.2.0",
@@ -22,7 +22,7 @@
     "eject": "react-native-scripts eject",
     "android": "react-native-scripts android",
     "ios": "react-native-scripts ios",
-    "test": "node --harmony node_modules/jest/bin/jest.js"
+    "test": "node --harmony node_modules/jest/bin/jest.js --watch"
   },
   "jest": {
     "preset": "jest-expo",

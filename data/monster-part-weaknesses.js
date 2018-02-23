@@ -1,4 +1,4 @@
-export default MonsterPartWeaknesses = {
+const MonsterPartWeaknesses = {
 	"Great Jagras": {
 		Weak: [ "Head", "Forelegs", "Stomach" ],
 		Breakable: [ "Head", "Forelegs", "Stomach" ],
@@ -116,3 +116,5 @@ export default MonsterPartWeaknesses = {
 		Severable: [ "Tail" ],
 	},
 };
+
+export default MonsterPartWeaknesses;

@@ -1,4 +1,4 @@
-export default MonsterData = [
+const MonsterData = [
 	{
 		"name": "Pink Rathian",
 		"image": require("..\\assets\\monsters\\MHW-Pink_Rathian_Icon.png"),
@@ -80,3 +80,5 @@ export default MonsterData = [
 		"image": require("..\\assets\\monsters\\MHW-Paolumu_Icon.png"),
 	},
 ];
+
+export default MonsterData;
