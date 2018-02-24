@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Text, } from 'react-native';
-import Monster from 'mhw-gear-wishlist/components/shared/Monster';
-import ErrorView from 'mhw-gear-wishlist/components/Views/ErrorView';
+import Monster from 'mhw-gear-wishlist/src/components/shared/Monster';
+import ErrorView from 'mhw-gear-wishlist/src/components/Views/ErrorView';
 import MonsterWeaknesses from 'mhw-gear-wishlist/data/monster-weaknesses';
-import WeaknessRating from 'mhw-gear-wishlist/components/shared/WeaknessRating';
+import WeaknessRating from 'mhw-gear-wishlist/src/components/shared/WeaknessRating';
 
 export default class MonsterDetailsView extends React.Component {
   constructor(props) {
